@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb
+    container_name: mariadb
+    restart: always
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_root_password
+      - db_password
+    networks:
+      - backend
+
+  ghost:
+    image: ghost
+    container_name: ghost
+    restart: always
+    ports:
+      - "3001:2368"
+    volumes:
+      - ./ghost/config.production.json:/var/lib/ghost/config.production.json
+    depends_on:
+      - mariadb
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  db_data:
+
+secrets:
+  db_root_password:
+    file: ./secrets/db_root_password
+  db_password:
+    file: ./secrets/db_password
